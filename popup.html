@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>RISEN Prompt Engineer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;background:#0f1117;color:#e2e8f0;width:460px}
+#app{padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+header h1{font-size:15px;font-weight:700;color:#a78bfa}
+.subtitle{font-size:10px;color:#64748b;margin-top:2px}
+#scanBtn{background:#7c3aed;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer}
+#scanBtn:hover{background:#6d28d9}
+#scanBtn:disabled{background:#374151;color:#6b7280;cursor:not-allowed}
+#statusBar{font-size:10px;padding:6px 9px;border-radius:5px;margin-bottom:10px;display:none;line-height:1.4}
+#statusBar.ok{background:#14532d;color:#86efac;display:block}
+#statusBar.err{background:#7f1d1d;color:#fca5a5;display:block}
+#statusBar.loading{background:#1e3a5f;color:#93c5fd;display:block}
+#intentSection{margin-bottom:12px}
+#intentSection h2{font-size:11px;font-weight:600;color:#64748b;margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em}
+#intentWrap{display:flex;flex-wrap:wrap;gap:5px}
+.intent-btn{background:#1e2130;border:1px solid #2d3748;border-radius:5px;color:#94a3b8;font-size:11px;padding:4px 9px;cursor:pointer;transition:all .15s}
+.intent-btn:hover{border-color:#7c3aed;color:#c4b5fd}
+.intent-btn.active{background:#4c1d95;border-color:#7c3aed;color:#e9d5ff;font-weight:600}
+.field{margin-bottom:10px}
+label{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:3px}
+.tag{font-size:9px;background:#312e81;color:#a5b4fc;border-radius:3px;padding:1px 5px;font-weight:400}
+input[type=text],textarea{width:100%;background:#1e2130;border:1px solid #2d3748;border-radius:6px;padding:7px 9px;font-size:11px;color:#e2e8f0;resize:vertical;outline:none;transition:border-color .2s}
+input[type=text]:focus,textarea:focus{border-color:#7c3aed}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toggles{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.toggle-label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:#94a3b8}
+.track{width:28px;height:15px;background:#2d3748;border-radius:999px;position:relative;transition:background .2s;flex-shrink:0}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:left .2s}
+input[type=checkbox]{display:none}
+input[type=checkbox]:checked+.track{background:#7c3aed}
+input[type=checkbox]:checked+.track::after{left:15px}
+#buildBtn{width:100%;padding:9px;background:#7c3aed;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
+#buildBtn:hover{background:#6d28d9}
+#out-wrap{margin-top:12px}
+.out-header{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#64748b;margin-bottom:5px}
+.badge{background:#1e2130;border:1px solid #2d3748;border-radius:4px;padding:2px 6px;font-size:9px;color:#a78bfa;margin-right:5px}
+#copyBtn{background:#1e2130;border:1px solid #2d3748;border-radius:4px;color:#a78bfa;font-size:10px;padding:2px 7px;cursor:pointer}
+#copyBtn:hover{background:#2d3748}
+pre#output{background:#1e2130;border:1px solid #2d3748;border-radius:6px;padding:10px;font-size:10px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:200px;overflow-y:auto;color:#cbd5e1}
+#tip{margin-top:10px;padding:7px 9px;background:#1e2130;border-left:3px solid #7c3aed;border-radius:4px;font-size:10px;color:#94a3b8}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <h1>RISEN Prompt Engineer</h1>
+      <p class="subtitle">Token-efficient · Bias-aware · Auto-fill from page</p>
+    </div>
+    <button id="scanBtn">Scan Page</button>
+  </header>
+  <div id="statusBar"></div>
+  <div id="intentSection" class="hidden">
+    <h2>What do you want to do with this?</h2>
+    <div id="intentWrap"></div>
+  </div>
+  <div id="risenFields" class="hidden">
+    <div class="field">
+      <label>R - Role <span class="tag">auto-filled</span></label>
+      <input id="role" type="text"/>
+    </div>
+    <div class="field">
+      <label>I - Input <span class="tag">auto-filled</span></label>
+      <textarea id="input" rows="3"></textarea>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>S - Steps <span class="tag">auto-filled</span></label>
+        <textarea id="steps_field" rows="4"></textarea>
+      </div>
+      <div class="field">
+        <label>E - Expectations <span class="tag">auto-filled</span></label>
+        <textarea id="expect" rows="4"></textarea>
+      </div>
+    </div>
+    <div class="field">
+      <label>N - Narrowing <span class="tag">auto-filled</span></label>
+      <textarea id="narrow" rows="2"></textarea>
+    </div>
+    <div class="toggles">
+      <label class="toggle-label">
+        <input type="checkbox" id="biasGuard" checked/>
+        <span class="track"></span>Bias guard
+      </label>
+      <label class="toggle-label">
+        <input type="checkbox" id="stabilityMode"/>
+        <span class="track"></span>Stability mode
+      </label>
+    </div>
+    <button id="buildBtn">Build Prompt</button>
+  </div>
+  <div id="out-wrap" class="hidden">
+    <div class="out-header">
+      <span>Generated Prompt</span>
+      <div>
+        <span id="tokenCount" class="badge">0 tokens</span>
+        <button id="copyBtn">Copy</button>
+      </div>
+    </div>
+    <pre id="output"></pre>
+  </div>
+  <div id="tip">Tip: Edit any field before building. Run the same prompt 3-5 times and treat output variance as strategy signal.</div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

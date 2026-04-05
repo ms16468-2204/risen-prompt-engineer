@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "RISEN Prompt Engineer",
+  "version": "2.0.0",
+  "description": "Auto-reads any page and builds bias-aware RISEN prompts",
+  "permissions": ["activeTab", "storage", "clipboardWrite", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
